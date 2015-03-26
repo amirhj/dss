@@ -50,12 +50,12 @@ class DistributedQLearnerRGCTest:
 		os.mkdir('test/'+self.testName)
 				
 	def run(self):
-		log = Logger(False,True)
+		#log = Logger(False,True)
 		
 		self.turnOffLearning()
 		
 		for i in range(self.test):
-			log.log("test %d ***************************************" % (i+1,),3)
+			#log.log("test %d ***************************************" % (i+1,),3)
 			
 			activityLog = [ [] for k in range(self.numberOfAgents) ]
 			
@@ -96,7 +96,7 @@ class DistributedQLearnerRGCTest:
 					
 					activityLog[a.index].append(a.currentState)
 					
-					log.log(str(a.id)+"\tin state: %s  (%s,%s)" % (str(a.currentState),a.readNeighborColor('right'),a.readNeighborColor('left')),a.index)
+					#log.log(str(a.id)+"\tin state: %s  (%s,%s)" % (str(a.currentState),a.readNeighborColor('right'),a.readNeighborColor('left')),a.index)
 						
 					for ac in actions:
 						nextState = a.getTransition(a.currentState, ac)
@@ -123,7 +123,7 @@ class DistributedQLearnerRGCTest:
 					if len(otherActions) > 0:
 						if util.flipCoin(self.epsilon):
 							action = util.sample(otherActionDistibution, otherActions)
-							log.log("\tselected by chance",a.index)
+							#log.log("\tselected by chance",a.index)
 												
 					nextState = a.getTransition(a.currentState, action)
 					state = a.currentState
@@ -133,8 +133,8 @@ class DistributedQLearnerRGCTest:
 					a.qvalues[(state, action)] = (1-self.alpha) * a.qvalues[(state, action)] + self.alpha * sample
 					
 					
-					log.log("\tdo: %s \t got %f" % (str(action), reward),a.index)
-					log.log("\tto: %s  (%s,%s)" % (nextState,a.readNeighborColor('right'),a.readNeighborColor('left')),a.index)
+					#log.log("\tdo: %s \t got %f" % (str(action), reward),a.index)
+					#log.log("\tto: %s  (%s,%s)" % (nextState,a.readNeighborColor('right'),a.readNeighborColor('left')),a.index)
 					
 					if state not in self.graph[i]:
 						self.graph[i][state] = {}
