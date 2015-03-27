@@ -71,6 +71,11 @@ class DistributedQLearnerRGCTest:
 				if states not in self.startedStates:
 					self.startedStates.add(states)
 					break
+				
+			# same start state for all agents in all iterations
+			for a in self.agents:
+				a.currentState = ('C1','C1','C1')	
+				
 			step = 0
 			while not self.isStable(lastActions, globalState):
 				step += 1
