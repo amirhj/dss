@@ -21,12 +21,13 @@ class DistributedQLearnerRGCTest:
 		
 		self.createAgents()
 		
-		self.globalStateSpace = {}
 		self.startStates = set()
 		self.startedStates = set()
 		self.goodGlobalStates = []
 		
 		self.palletMap = {'C1':'red', 'C2':'green', 'C3':'blue'}
+		
+		#self.globalStateSpace = {}
 	
 	def createAgents(self):
 		qlearner = globals()[str(self.qlearner)]
@@ -48,6 +49,8 @@ class DistributedQLearnerRGCTest:
 			shutil.rmtree('test/'+self.testName)
 		
 		os.mkdir('test/'+self.testName)
+		
+		self.globalStateSpaceFile = open('test/%s/.globalStates' % (self.testName,), 'a')
 				
 	def run(self):
 		#log = Logger(False,True)
@@ -57,12 +60,19 @@ class DistributedQLearnerRGCTest:
 		for i in range(self.test):
 			#log.log("test %d ***************************************" % (i+1,),3)
 			
-			activityLog = [ [] for k in range(self.numberOfAgents) ]
+			#activityLog = [ [] for k in range(self.numberOfAgents) ]
+			
+			self.agentsFiles = [None for k in range(self.numberOfAgents)]
+			path = 'test/'+self.testName+'/test'+str(i)
+			os.mkdir(path)
+			for a in self.agents:
+				self.agentsFiles[a.index] = open(path+'/.agent'+str(a.index)+'File', 'a')
 			
 			lastActions = [None for q in range(self.numberOfAgents)]
 			globalState = [None for q in range(self.numberOfAgents)]
 			
-			while True:
+			# different start state for each agent in every episode
+			"""while True:
 				states = []
 				for a in self.agents:
 					a.currentState = tuple([random.choice(DistributedRGCAgent.colors) for q in range(3)])
@@ -70,11 +80,11 @@ class DistributedQLearnerRGCTest:
 				states = tuple(states)
 				if states not in self.startedStates:
 					self.startedStates.add(states)
-					break
+					break"""
 				
 			# same start state for all agents in all iterations
 			for a in self.agents:
-				a.currentState = ('C1','C1','C1')	
+				a.currentState = ('C1','C1','C1')
 				
 			step = 0
 			while not self.isStable(lastActions, globalState):
@@ -87,8 +97,8 @@ class DistributedQLearnerRGCTest:
 					agentsColors.append(a.currentState[0])
 				agentsColors = tuple(agentsColors)
 				
-				if agentsColors not in self.globalStateSpace:
-					self.globalStateSpace[agentsColors] = util.Counter()
+				"""if agentsColors not in self.globalStateSpace:
+					self.globalStateSpace[agentsColors] = util.Counter()"""
 				
 				while len(agentsSet) > 0:
 					a = random.choice(list(agentsSet))
@@ -99,7 +109,8 @@ class DistributedQLearnerRGCTest:
 					maxq = None
 					maxActions = []
 					
-					activityLog[a.index].append(a.currentState)
+					#activityLog[a.index].append(a.currentState)
+					self.agentsFiles[a.index].write(str(a.currentState)+"\n")
 					
 					#log.log(str(a.id)+"\tin state: %s  (%s,%s)" % (str(a.currentState),a.readNeighborColor('right'),a.readNeighborColor('left')),a.index)
 						
@@ -150,24 +161,28 @@ class DistributedQLearnerRGCTest:
 					lastActions[a.index] = action
 					globalState[a.index] = a.currentState
 					
-					activityLog[a.index].append(action)
+					#activityLog[a.index].append(action)
+					self.agentsFiles[a.index].write(str(action)+"\n")
 					
 				agentsNewColors = []
 				for a in self.agents:
 					agentsNewColors.append(a.currentState[0])
 				agentsNewColors = tuple(agentsNewColors)
 				
-				self.globalStateSpace[agentsColors][agentsNewColors] += 1
+				#self.globalStateSpace[agentsColors][agentsNewColors] += 1
+				self.globalStateSpaceFile.write("%s|%s\n" % (",".join(agentsColors),",".join(agentsNewColors)))
 			
 			print "Test episode %d finished in %d clocks." % (i+1, step)
 			
 			for a in self.agents:
-				activityLog[a.index].append(a.currentState)
+				#activityLog[a.index].append(a.currentState)
+				self.agentsFiles[a.index].write(str(a.currentState)+"\n")
+				self.agentsFiles[a.index].close()
 				a.reset()
 				
-			self.generateActivityGraph(activityLog, i+1)
+			#self.generateActivityGraph(activityLog, i+1)
 			
-		self.generateGraph()
+		#self.generateGraph()
 			
 	def generateGraph(self):
 		graph = open('test/'+self.testName+'/globalState.dot', 'w')
@@ -259,7 +274,6 @@ class DistributedQLearnerRGCTest:
 			finalState.write("\t\"A%d\" [ color=%s ];\n" % (i, self.palletMap[activityLog[i][-1][0]]))
 		finalState.write("}")
 		finalState.close()
-		
 	
 	def isStable(self, lastActions, agentsState):
 		if None in agentsState:
